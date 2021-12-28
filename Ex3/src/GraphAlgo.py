@@ -1,4 +1,5 @@
 import json
+import random
 import sys
 import pygame
 from typing import List
@@ -13,10 +14,8 @@ from src.GraphInterface import GraphInterface
 
 class GraphAlgo(GraphAlgoInterface):
 
-    def __init__(self):
-        self.graph = DiGraph()
-        # self.graph: DiGraph
-
+    def __init__(self, g: DiGraph = DiGraph()):
+        self.graph = g
         self.height = 600
         self.width = 500
 
@@ -26,16 +25,20 @@ class GraphAlgo(GraphAlgoInterface):
     def load_from_json(self, file_name: str) -> bool:
         try:
             with open(file_name, "r") as fp:
+                self.graph = DiGraph()
                 di = json.load(fp)
                 for i in di["Edges"]:
                     e = Edge(**i)
+                    # print(e)
                     self.graph.add_edge(e.get_src(), e.get_dest(), e.get_weight())
                 for i in di["Nodes"]:
                     if "pos" in i:
                         pos = tuple(map(float, i["pos"].split(',')))
                         self.graph.add_node(i["id"], pos)
                     else:
-                        self.graph.add_node(i["id"])
+                        x = random.uniform(35.000, 35.30)
+                        y = random.uniform(32.000, 32.30)
+                        self.graph.add_node(i["id"], (x, y, 0))
                 return True
         except IOError as e:
             print(e)
@@ -107,11 +110,15 @@ class GraphAlgo(GraphAlgoInterface):
             ans.append(id1)
 
         if dist == sys.float_info.max:
-            ans = None
+            ans = []
+            dist = "inf"
         return dist, ans
 
     def TSP(self, node_lst: List[int]) -> (List[int], float):
         n = self.graph.v_size()
+        temp = []
+        for i in range(n):
+            temp.append(i)
         mat = [[0 for x in range(n)] for y in range(n)]
         for i in range(n):
             for j in range(n):
@@ -131,34 +138,43 @@ class GraphAlgo(GraphAlgoInterface):
         counter = 0
         j = 0
         i = 0
-        list_size = len(node_lst)
+        list_size = len(temp)
         minimum = sys.float_info.max
-        visited = [node_lst[0]]
+        visited = [temp[0]]
         route = [0 for x in range(n)]
         while i < list_size and j < list_size:
             if counter >= list_size - 1:
                 break
             # if node_lst[j] < len(visited):
             # if j != i and visited.__contains__(node_lst[j]) is False:
-            if j != i and not (node_lst[j] in visited):
+            if j != i and not (temp[j] in visited):
                 if mat[i][j] < minimum:
                     minimum = mat[i][j]
                     route[counter] = j + 1
             j += 1
             if j == list_size:
                 minimum = sys.float_info.max
-                visited.append(node_lst[route[counter] - 1])
+                visited.append(temp[route[counter] - 1])
                 j = 0
                 i = route[counter] - 1
                 counter += 1
-        # for k in range(list_size):
-        #     if i != k and mat[i][k] < minimum:
-        #         minimum = mat[i][k]
-        #         route[counter] = k + 1
+
+        ans = []
+        size = len(node_lst)
+        start = visited.index(node_lst[0])
+        end = visited.index(node_lst[size - 1])
+        i = 0
+        while i < len(visited):
+            if start <= i <= end:
+                ans.append(visited[i])
+            i += 1
         weight = 0
-        for i in range(list_size - 1):
-            weight += self.graph.edges.get(i).get(i + 1).get_weight()
-        return visited, weight
+
+        i = 0
+        while i < len(ans) - 1:
+            weight += self.graph.edges.get(ans[i]).get(ans[i + 1]).get_weight()
+            i += 1
+        return ans, weight
 
     def centerPoint(self) -> (int, float):
         n = self.graph.v_size()
@@ -191,45 +207,16 @@ class GraphAlgo(GraphAlgoInterface):
                 maximum = temp[i]
         ans = 0
         for i in range(n):
+            if temp[i] == sys.float_info.max:
+                return None, "inf"
+
+        for i in range(n):
             if temp[i] == maximum:
                 for j in range(len(D[i])):
                     if D[i][j] > ans:
                         ans = D[i][j]
                 return i, ans
-        return None
-
-    # def plot_graph(self) -> None:
-    #     pygame.init()
-    #     window = (self.height, self.width)
-    #     scr = pygame.display.set_mode(window, pygame.RESIZABLE)
-    #     background = pygame.Surface(window)
-    #     running = True
-    #     while running:
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 running = False
-    #         scr.fill((255, 255, 255))
-    #         for i in self.graph.nodes:
-    #             node = self.graph.nodes.get(i)
-    #             x_pixel = self.scale_x(node.get_x())
-    #             y_pixel = self.scale_y(node.get_y())
-    #             circle = pygame
-    #             pygame.draw.circle(scr, (200, 0, 0), (x_pixel, y_pixel), 10)
-    #             # pygame.draw.circle(scr, (200, 0, 0), (250, 250), 80)
-    #             # color = (0, 0, 255)
-    #             # pygame.draw.rect(scr, color, pygame.Rect(60, 60, 100, 100))
-    #             # color = (0, 255, 0)
-    #             # pygame.draw.line(scr, color, (40, 300), (140, 380), 6)
-    #             # purple = (102, 0, 102)
-    #             # pygame.draw.polygon(scr, purple,
-    #             #                     ((346, 0), (491, 106), (436, 277), (256, 277), (200, 106)))
-    #
-    #         # scr.blit(pygame.Surface, (50 - pygame.Surface.get_width(scr) // 2, 50 - pygame.Surface.get_height(scr) // 2))
-    #         # scr.blit(background, (0,0))
-    #         # pygame.transform.scale(Surface, (50 - pygame.Surface.get_width(scr) // 2, 50 - pygame.Surface.get_height(scr) // 2))
-    #         pygame.display.flip()
-    #     pygame.quit()
-    #     sys.exit()
+        return None, "inf"
 
     def plot_graph(self) -> None:
         x = []
@@ -239,16 +226,19 @@ class GraphAlgo(GraphAlgoInterface):
             x.append(node.get_x())
             y.append(node.get_y())
         i = 0
-        while i < len(x) - 1:
-            plt.arrow(x[i], y[i], x[i + 1] - x[i], y[i + 1] - y[i], width=0.00005, head_width=0.0003,
-                      head_length=0.0003,
-                      length_includes_head=True, color="black")
-            i += 1
+
+        for i in self.graph.edges.values():
+            for j in i.values():
+                edge = j
+                plt.arrow(x[edge.get_src()], y[edge.get_src()], x[edge.get_dest()] - x[edge.get_src()],
+                          y[edge.get_dest()] - y[edge.get_src()], width=0.00005, head_width=0.0003,
+                          head_length=0.0003,
+                          length_includes_head=True, color="black")
 
         plt.scatter(x, y, color='r')
         i = 0
         while i < len(x):
-            plt.text(x[i], y[i], i, fontdict=None, fontsize=15, color = 'b')
+            plt.text(x[i], y[i], i, fontdict=None, fontsize=15, color='b')
             i += 1
         plt.show()
 
@@ -293,24 +283,3 @@ class GraphAlgo(GraphAlgoInterface):
             if temp < minimum:
                 minimum = temp
         return minimum
-
-
-if __name__ == '__main__':
-    g = DiGraph()
-    g_algo = GraphAlgo()
-    file = "../data/A0.json"
-    g_algo.load_from_json(file)  # init a GraphAlgo from a json file
-    print(g_algo.max_x())
-    # g_algo.load_from_json(file)  # init a GraphAlgo from a json file
-    # g_algo.save_to_json("save.json")
-
-    # g_algo.get_graph().add_node(0, (0, 0, 0))
-    # g_algo.get_graph().add_node(1)
-    # g_algo.get_graph().add_node(2)
-    # g_algo.get_graph().add_edge(0, 1, 1)
-    # g_algo.get_graph().add_edge(1, 2, 4)
-    # print(g_algo.centerPoint())
-    # # (1, [0, 1])
-    # print(g_algo.shortest_path(0, 2))
-    # # (5, [0, 1, 2])
-    # # print(a.shortest_path(0, 2))
