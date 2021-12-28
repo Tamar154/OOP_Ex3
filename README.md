@@ -31,7 +31,7 @@ load: reads a JSON file and loads it as graph.
   
 plot_graph:in this function we used matplotlib to be able to present the graph. 
  
-On the wiki link below, you will find our difference report on the functions we used in Ex2.  
+On the wiki link below, you will find our difference report between the plot and functions we used now to Ex2.  
 
 https://github.com/tamar-revazishvili/OOP_Ex3.wiki.git
 
