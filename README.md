@@ -33,7 +33,6 @@ plot_graph:in this function we used matplotlib to be able to present the graph.
  
 On the wiki link below, you will find our difference report on the functions we used in Ex2.  
 
-
-
+https://github.com/tamar-revazishvili/OOP_Ex3.wiki.git
 
 Running the program will be via Psycharm software or via CMD.
